@@ -1,7 +1,10 @@
 # Rock-Generator
 
 ## Requirements
+```
 Java Runtime Environment 1.8
+Java can be downloaded from https://java.com/en/download/
+```
 
 ### Description
 ```
