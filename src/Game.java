@@ -19,8 +19,8 @@ import javax.swing.WindowConstants;
 public class Game extends Canvas implements Runnable, KeyListener {
 
 	private static final long serialVersionUID = 1L;
-	public static final int WIDTH = 1920;
-	public static final int HEIGHT = 1080;
+	public static final int WIDTH = 800;
+	public static final int HEIGHT = 600;
 	private static GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
 	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
 	public double[] zBuffer = new double[WIDTH*HEIGHT];
@@ -31,8 +31,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
 	public IcoSphere planet;
 	public ExecutorService executor;
 	public boolean rotating = false;
-	private int backgroundColor = 0xFF00AAFF;
-	private int planetColor = 0xFFFF5500;
+	private int backgroundColor = 0xFF000000;
+	private int planetColor = 0xFFFFFF;
+	public Vector lightSource = new Vector(0,-5, 20);
 	int currentFPS = 0;
 	
 	// Manages main loop
@@ -70,8 +71,8 @@ public class Game extends Canvas implements Runnable, KeyListener {
 		setMaximumSize(new Dimension(WIDTH, HEIGHT));
 		
 		JFrame frame = new JFrame();
-		frame.setUndecorated(true);
-		device.setFullScreenWindow(frame);
+//		frame.setUndecorated(true);
+//		device.setFullScreenWindow(frame);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.add(this);
 		frame.pack();
@@ -79,7 +80,8 @@ public class Game extends Canvas implements Runnable, KeyListener {
 		frame.addKeyListener(this);
 		addKeyListener(this);
 		planet = new IcoSphere(new Vector(0, 0, 20), planetColor, this);
-		executor = Executors.newFixedThreadPool(8);
+		executor = Executors.newWorkStealingPool();
+//		executor = Executors.newFixedThreadPool(1);
 	}
 	
 	// Starts the main thread and background color
@@ -100,19 +102,15 @@ public class Game extends Canvas implements Runnable, KeyListener {
 				pixels[i] = backgroundColor;
 			}
 		}
-		planet.update();
-	}
-	
-	// Renders objects and manages multithreading
-	public void render() {
-		BufferStrategy bs = getBufferStrategy();
-		if (bs == null) {
-			createBufferStrategy(3);
-			return;
-		}
 		
-		ArrayList<Future> futures = new ArrayList<Future>();
-		Graphics g = bs.getDrawGraphics();
+		lightSource.rotate(new Vector(0, 0, 20), new Vector(0, 1, 0), Calculations.TO_RADIANS * 1);
+		
+		planet.update();
+		
+		
+		
+		ArrayList<Future<?>> futures = new ArrayList<Future<?>>();
+		
 		for (int j = 0; j < planet.triangles.size(); j++) {
 			Triangle t = planet.triangles.get(j);
 			if (t.a.z > 0 && t.b.z > 0 && t.c.z > 0) {
@@ -123,7 +121,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
 				
 			}
 		}
-		for (Future f : futures) {
+		for (Future<?> f : futures) {
 			try {
 				f.get();
 			} catch (Exception e) {
@@ -131,6 +129,19 @@ public class Game extends Canvas implements Runnable, KeyListener {
 			}
 		}
 		futures.clear();
+		
+		
+	}
+	
+	// Renders objects and manages multithreading
+	public void render() {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+			return;
+		}
+		
+		Graphics g = bs.getDrawGraphics();
 		
 		
 		g.drawImage(img, 0, 0, null);

@@ -5,7 +5,7 @@ public class Triangle {
 	private Game game;
 	private int color;
 	Vector normal = new Vector(1, 1, 1);
-	Vector lightSource = new Vector(1, 1, 1);
+	
 	int shade;
 	
 	// rotates points of triangle
@@ -143,12 +143,26 @@ public class Triangle {
 //		}
 	};
 	
+	
 	// returns the shade value of a triangle based on its normal vector
 	public int calculateShade() {
-		double magnitude = lightSource.distance(0, 0, 0) * normal.distance(0, 0, 0);
-		double angle = Calculations.TO_DEGREES * (Math.acos(lightSource.dotProduct3D(normal) / magnitude));
-		return (int)Math.round((0xFF/(1 + Math.pow(Math.E, 0.04 * (-angle+90)))));
-//		return 255;
+		Vector center = new Vector((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
+//		double magnitude = game.lightSource.distance(0, 0, 0) * normal.distance(0, 0, 0);
+		Vector light = game.lightSource.subtract(center);
+		
+		// Old lighting
+//		double angle = Calculations.TO_DEGREES * (Math.acos(light.dotProduct3D(normal) / magnitude));
+//		return (int)Math.round((0xFF/(1 + Math.pow(Math.E, 0.09 * (-angle+90)))));
+		
+		// Highlight based lighting
+		light.normalize(0, 0, 0);
+		center.normalize(0, 0, 0);
+		light.rotate(new Vector(0, 0, 0), normal, Math.PI);
+		
+		double angle2 = Calculations.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
+		int highlight = (int)(255/(1 + 0.004 * Math.pow(angle2, 2)));
+		return highlight;
+		
 	}
 	
 }
