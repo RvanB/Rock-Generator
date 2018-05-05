@@ -41,7 +41,6 @@ public class IcoSphere {
 	
 	// updates object, applies transformations
 	public void update() {
-		Vector rotateVector = new Vector(Math.cos(Calculations.TO_RADIANS * 25), Math.sin(Calculations.TO_RADIANS * 25), center.z);
 		
 	}
 	

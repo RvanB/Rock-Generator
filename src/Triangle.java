@@ -38,7 +38,7 @@ public class Triangle {
 	
 	// Separates triangle into 2 triangles with horizontal bases
 	Runnable render = () -> {
-		int shade = getShade();
+		int shade = getShade(20);
 		int highlight = getHighlight();
 			Vector a = this.a.project();
 			Vector b = this.b.project();
@@ -127,22 +127,22 @@ public class Triangle {
 						if (main.zBuffer[index] > depth) {
 							main.zBuffer[index] = depth;
 							// just diffuse
-							main.pixels[index] = Calculations.RGBtoHex(color.getRed(), color.getGreen(), color.getBlue());
+//							main.pixels[index] = Main.RGBtoHex(color.getRed(), color.getGreen(), color.getBlue());
 							
-							float[] value = Color.RGBtoHSB((int)(color.getRed() * Calculations.map(shade, 0.0, 255.0, 0.0, 1.0)),
-														   (int)(color.getGreen() * Calculations.map(shade, 0.0, 255.0, 0.0, 1.0)),
-														   (int)(color.getBlue() * Calculations.map(shade, 0.0, 255.0, 0.0, 1.0)), null);
-							value[1] = (float) Calculations.map(highlight, 0.0, 255.0, 1.0, 0.0); // saturation
-							value[2] = (float) Calculations.map(highlight, 0.0, 255.0, value[2], 1.0); // brightness
+							float[] value = Color.RGBtoHSB((int)(color.getRed() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)),
+														   (int)(color.getGreen() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)),
+														   (int)(color.getBlue() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)), null);
+							value[1] = (float) Main.map(highlight, 0.0, 255.0, value[1], 0.0); // saturation
+							value[2] = (float) Main.map(highlight, 0.0, 255.0, value[2], 1.0); // brightness
 							
 							Color result = Color.getHSBColor(value[0], value[1], value[2]);
-							main.pixels[index] = Calculations.RGBtoHex(result.getRed(), result.getGreen(), result.getBlue());
+							main.pixels[index] = Main.RGBtoHex(result.getRed(), result.getGreen(), result.getBlue());
 							
 //							 old color calculation (incorrect highlight color)
 //							int lightValue = Math.min(Math.max(shade + highlight, 0), 255);
-//							main.pixels[index] = Calculations.RGBtoHex(0xFF000000, (int)(color.getRed() * Calculations.map(lightValue, 0, 255, 0, 1)),
-//																				(int)(color.getGreen() * Calculations.map(lightValue, 0, 255, 0, 1)), 
-//																				(int)(color.getBlue() * Calculations.map(lightValue, 0, 255, 0, 1)));					
+//							main.pixels[index] = Main.RGBtoHex(0xFF000000, (int)(color.getRed() * Main.map(lightValue, 0, 255, 0, 1)),
+//																				(int)(color.getGreen() * Main.map(lightValue, 0, 255, 0, 1)), 
+//																				(int)(color.getBlue() * Main.map(lightValue, 0, 255, 0, 1)));					
 						}
 					}
 				}
@@ -169,24 +169,26 @@ public class Triangle {
 		center.normalize(0, 0, 0);
 		normal.normalize(0, 0, 0);
 		light.rotate(new Vector(0, 0, 0), normal, Math.PI);
-		double angle2 = Calculations.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
+		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
 		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
+//		int highlight = (int)(255.0 * Math.pow(Math.E, -0.07 * angle2));
+		
 //		int highlight = (int)(255.0 / (1.0 + (Math.pow(Math.E, 0.07 * (angle2 - 70)))));
 //		int highlight = (int)Math.max((-0.03148 * Math.pow(angle2, 2) + 255), 0);
 //		int highlight = (int)Math.min(Math.max(((-0.0014 * (Math.pow(angle2 - 45, 3))) + 127), 0), 255);
-//		int highlight = (int)(255.0 * Math.pow(Math.E, -0.07 * angle2));
+
 //		int highlight = (int)Math.max(((-255.0/90.0) * angle2 + 255.0), 0);
 		return highlight;
 		
 	}
 	
-	public int getShade() {
+	public int getShade(int ambient) {
 		// Old lighting
 		Vector center = new Vector((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
 		double magnitude = main.lightSource.distance(0, 0, 0) * normal.distance(0, 0, 0);
 		Vector light = center.subtract(main.lightSource);
-		double angle = Calculations.TO_DEGREES * (Math.acos(light.dotProduct3D(normal) / magnitude));
-		return (int)Math.round((255.0/(1 + Math.pow(Math.E, 0.1 * (-angle+90)))));
+		double angle = Main.TO_DEGREES * (Math.acos(light.dotProduct3D(normal) / magnitude));
+		return (int)Math.min(Math.max((255.0/(1 + Math.pow(Math.E, 0.15 * (-angle+90)))) + ambient, 0), 255);
 	}
 	
 }

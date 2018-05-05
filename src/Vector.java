@@ -41,7 +41,7 @@ public class Vector {
 		
 		double length = Math.abs(distance(x, y, z));
 		
-		double scalar = Math.abs(Calculations.map(map.altitude(this.x, this.y, this.z), -1, 1, -3, 3));
+		double scalar = Math.abs(Main.map(map.altitude(this.x, this.y, this.z), -1, 1, -3, 3));
 		
 		this.x -= x;
 		this.y -= y;

@@ -29,10 +29,10 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	public boolean running = false;
 	public IcoSphere planet;
 	public ExecutorService executor;
-	private int backgroundColor = 0x000000;
-	private Color planetColor = new Color(255, 50, 0);
+	private int backgroundColor = 0x171d33;
+	private Color planetColor = new Color(229, 235, 220);
 	private double depth = 10;
-	public Vector lightSource = new Vector(-10, -10, depth - 5);
+	public Vector lightSource = new Vector(-1, 0, depth - 5);
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
 	private boolean mouseDown = false;
@@ -41,6 +41,33 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	private double yawVelocity = 0;
 	private double pitchVelocity = 0;
 	
+	public static final double TO_RADIANS = Math.PI / 180;
+	public static final double TO_DEGREES = 180 / Math.PI;
+	
+	// Takes a number in a range, and returns the equivalent in a different range
+	public static double map(double value, double min1, double max1, double min2, double max2) {
+		return value / (max1-min1) * (max2-min2) + min2;
+	}
+	
+	// Converts ARGB values to a hexadecimal number
+	public static int RGBtoHex(int r, int g, int b) {
+		return ((r&0xff) << 16) | ((g&0xff) << 8) | (b&0xff);
+	}
+	
+	// Returns the red channel of a given color in hexadecimal format
+	public static int red(int hex) {
+	    return (hex & 0xFF0000) >> 16;
+	}
+	
+	// Returns the green channel of a given color in hexadecimal format
+	public static int green(int hex) {
+	    return (hex & 0xFF00) >> 8;
+	}
+	
+	// Returns the blue channel of a given color in hexadecimal format
+	public static int blue(int hex) {
+	    return (hex & 0xFF);
+	}
 	
 	// Manages main loop
 	public void run() {
