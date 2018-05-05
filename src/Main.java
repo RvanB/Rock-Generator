@@ -2,10 +2,11 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -17,24 +18,29 @@ import java.util.concurrent.Future;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-public class Game extends Canvas implements Runnable, KeyListener {
+public class Main extends Canvas implements Runnable, KeyListener, MouseListener, MouseMotionListener {
 
 	private static final long serialVersionUID = 1L;
-	public static final int WIDTH = 800;
-	public static final int HEIGHT = 600;
-	private static GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
-	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+	public static final int WIDTH = 700;
+	public static final int HEIGHT = 700;
+	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 	public double[] zBuffer = new double[WIDTH*HEIGHT];
 	public int[] pixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
 	public boolean running = false;
 	public IcoSphere planet;
 	public ExecutorService executor;
-	public boolean rotating = false;
-	private int backgroundColor = 0xFF660000;
-	private int planetColor = 0xFFFFFFFF;
-	public Vector lightSource = new Vector(-10, -10, 15);
+	private int backgroundColor = 0x000000;
+	private Color planetColor = new Color(255, 50, 0);
+	private double depth = 10;
+	public Vector lightSource = new Vector(-10, -10, depth - 5);
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
+	private boolean mouseDown = false;
+	private int mouseX = 0;
+	private int mouseY = 0;
+	private double yawVelocity = 0;
+	private double pitchVelocity = 0;
+	
 	
 	// Manages main loop
 	public void run() {
@@ -56,14 +62,12 @@ public class Game extends Canvas implements Runnable, KeyListener {
 	}
 	
 	// Sets up window and initializes objects
-	public Game() {
+	public Main() {
 		setMinimumSize(new Dimension(WIDTH, HEIGHT));
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		setMaximumSize(new Dimension(WIDTH, HEIGHT));
 		
 		JFrame frame = new JFrame();
-//		frame.setUndecorated(true);
-//		device.setFullScreenWindow(frame);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.add(this);
 		frame.pack();
@@ -71,7 +75,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
 		frame.addKeyListener(this);
 		frame.setLocationRelativeTo(null);
 		addKeyListener(this);
-		planet = new IcoSphere(new Vector(0, 0, 20), planetColor, this);
+		addMouseListener(this);
+		addMouseMotionListener(this);
+		planet = new IcoSphere(new Vector(0, 0, depth), planetColor, this);
 		executor = Executors.newWorkStealingPool();
 	}
 	
@@ -97,6 +103,16 @@ public class Game extends Canvas implements Runnable, KeyListener {
 		
 		planet.update();
 		
+		planet.rotate(planet.center, new Vector(1, 0, depth), pitchVelocity);
+		planet.rotate(planet.center, new Vector(0, 1, depth), yawVelocity);
+		
+		if (mouseDown) {
+			pitchVelocity = 0;
+			yawVelocity = 0;
+		} else {
+			pitchVelocity *= 0.99;
+			yawVelocity *= 0.99;
+		}
 		ArrayList<Future<?>> futures = new ArrayList<Future<?>>();
 		
 		for (int j = 0; j < planet.triangles.size(); j++) {
@@ -139,7 +155,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
 	}
 	
 	public static void main(String[] args) {
-		new Game().start();
+		new Main().start();
 	}
 
 	// Handles key input
@@ -147,18 +163,59 @@ public class Game extends Canvas implements Runnable, KeyListener {
 		int c = e.getKeyCode();
 		if (c == KeyEvent.VK_SPACE) {
 			if (!subdividing) {
+				double y = yawVelocity;
+				double p = pitchVelocity;
+				yawVelocity = 0;
+				pitchVelocity = 0;
 				subdividing = true;
 				planet.subdivide();
 				subdividing = false;
+				yawVelocity = y;
+				pitchVelocity = p;
 			}
 		}
 		if (c == KeyEvent.VK_ESCAPE) System.exit(0);
-		if (c == KeyEvent.VK_R) rotating = rotating ? false : true;
 
 	}
 	
 	public void keyReleased(KeyEvent e) {}
 
 	public void keyTyped(KeyEvent e) {}
+
+	public void mouseDragged(MouseEvent e) {
+		mouseMoved(e);
+	}
+
+	public void mouseMoved(MouseEvent e) {
+		
+		if (mouseDown) {
+	
+			int dx = e.getX() - mouseX;
+			int dy = e.getY() - mouseY;
+			
+			yawVelocity = -Math.atan(dx/80.0);
+			pitchVelocity = Math.atan(dy/80.0);
+			
+		}
+		mouseX = e.getX();
+		mouseY = e.getY();
+		
+	}
+
+	public void mouseClicked(MouseEvent e) {}
+
+	public void mouseEntered(MouseEvent e) {}
+
+	public void mouseExited(MouseEvent e) {}
+	
+	public void mousePressed(MouseEvent e) {
+		yawVelocity = 0;
+		pitchVelocity = 0;
+		mouseDown = true;
+	}
+
+	public void mouseReleased(MouseEvent e) {
+		mouseDown = false;
+	}
 	
 }

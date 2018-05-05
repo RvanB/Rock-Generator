@@ -1,11 +1,12 @@
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class IcoSphere {
 	
 	public ArrayList<Triangle> triangles = new ArrayList<>();
 	public Vector center;
-	private Game game;
-	public int color;
+	private Main main;
+	public Color color;
 	private Map map;
 	int angle = 0;
 	double phi = (1 + Math.sqrt(5)) / 2.0;
@@ -25,9 +26,9 @@ public class IcoSphere {
 	};
 	
 	// Constructor
-	public IcoSphere(Vector center, int color, Game game) {
+	public IcoSphere(Vector center, Color color, Main main) {
 		this.center = center;
-		this.game = game;
+		this.main = main;
 		this.color = color;
 		for (int i = 0; i < base.length; i++) {
 			base[i].x += center.x;
@@ -41,9 +42,6 @@ public class IcoSphere {
 	// updates object, applies transformations
 	public void update() {
 		Vector rotateVector = new Vector(Math.cos(Calculations.TO_RADIANS * 25), Math.sin(Calculations.TO_RADIANS * 25), center.z);
-		if (game.rotating) {
-			rotate(center, rotateVector, Calculations.TO_RADIANS * 1);
-		}
 		
 	}
 	
@@ -58,29 +56,29 @@ public class IcoSphere {
 	// Creates triangles between icosahedron points
 	public void create() {
 		Triangle[] t = {
-				new Triangle(base[0].copy(), base[11].copy(), base[5].copy(), color, game),
-				new Triangle(base[0].copy(), base[5].copy(), base[1].copy(), color, game),
-				new Triangle(base[0].copy(), base[1].copy(), base[7].copy(), color, game),
-				new Triangle(base[0].copy(), base[7].copy(), base[10].copy(), color, game),
-				new Triangle(base[0].copy(), base[10].copy(), base[11].copy(), color, game),
+				new Triangle(base[0].copy(), base[11].copy(), base[5].copy(), color, main),
+				new Triangle(base[0].copy(), base[5].copy(), base[1].copy(), color, main),
+				new Triangle(base[0].copy(), base[1].copy(), base[7].copy(), color, main),
+				new Triangle(base[0].copy(), base[7].copy(), base[10].copy(), color, main),
+				new Triangle(base[0].copy(), base[10].copy(), base[11].copy(), color, main),
 				
-				new Triangle(base[1].copy(), base[5].copy(), base[9].copy(), color, game),
-				new Triangle(base[5].copy(), base[11].copy(), base[4].copy(), color, game),
-				new Triangle(base[11].copy(), base[10].copy(), base[2].copy(), color, game),
-				new Triangle(base[10].copy(), base[7].copy(), base[6].copy(), color, game),
-				new Triangle(base[7].copy(), base[1].copy(), base[8].copy(), color, game),
+				new Triangle(base[1].copy(), base[5].copy(), base[9].copy(), color, main),
+				new Triangle(base[5].copy(), base[11].copy(), base[4].copy(), color, main),
+				new Triangle(base[11].copy(), base[10].copy(), base[2].copy(), color, main),
+				new Triangle(base[10].copy(), base[7].copy(), base[6].copy(), color, main),
+				new Triangle(base[7].copy(), base[1].copy(), base[8].copy(), color, main),
 				
-				new Triangle(base[3].copy(), base[9].copy(), base[4].copy(), color, game),
-				new Triangle(base[3].copy(), base[4].copy(), base[2].copy(), color, game),
-				new Triangle(base[3].copy(), base[2].copy(), base[6].copy(), color, game),
-				new Triangle(base[3].copy(), base[6].copy(), base[8].copy(), color, game),
-				new Triangle(base[3].copy(), base[8].copy(), base[9].copy(), color, game),
+				new Triangle(base[3].copy(), base[9].copy(), base[4].copy(), color, main),
+				new Triangle(base[3].copy(), base[4].copy(), base[2].copy(), color, main),
+				new Triangle(base[3].copy(), base[2].copy(), base[6].copy(), color, main),
+				new Triangle(base[3].copy(), base[6].copy(), base[8].copy(), color, main),
+				new Triangle(base[3].copy(), base[8].copy(), base[9].copy(), color, main),
 				
-				new Triangle(base[4].copy(), base[9].copy(), base[5].copy(), color, game),
-				new Triangle(base[2].copy(), base[4].copy(), base[11].copy(), color, game),
-				new Triangle(base[6].copy(), base[2].copy(), base[10].copy(), color, game),
-				new Triangle(base[8].copy(), base[6].copy(), base[7].copy(), color, game),
-				new Triangle(base[9].copy(), base[8].copy(), base[1].copy(), color, game),
+				new Triangle(base[4].copy(), base[9].copy(), base[5].copy(), color, main),
+				new Triangle(base[2].copy(), base[4].copy(), base[11].copy(), color, main),
+				new Triangle(base[6].copy(), base[2].copy(), base[10].copy(), color, main),
+				new Triangle(base[8].copy(), base[6].copy(), base[7].copy(), color, main),
+				new Triangle(base[9].copy(), base[8].copy(), base[1].copy(), color, main),
 		};
 		
 		ArrayList<Triangle> st = new ArrayList<Triangle>();
@@ -92,9 +90,6 @@ public class IcoSphere {
 	
 	// Subdivides surface triangles, normalizes vectors, applies perlin noise
 	public void subdivide() {
-		boolean wasRotating = game.rotating;
-		game.rotating = false;
-		
 		ArrayList<Triangle> st = new ArrayList<>();
 		for (int i = 0; i < triangles.size(); i++) {
 			Triangle l = triangles.get(i);
@@ -109,14 +104,11 @@ public class IcoSphere {
 			l.a = d;
 			l.b = e;
 			l.c = f;
-			int red = Calculations.red(color);
-			int green = Calculations.green(color);
-			int blue = Calculations.blue(color);
-			int alpha = Calculations.alpha(color);
-			st.add(new Triangle(d.copy(), a.copy(), e.copy(), Calculations.RGBtoHex(alpha, red, green, blue), game));
-			st.add(new Triangle(b.copy(), f.copy(), e.copy(), Calculations.RGBtoHex(alpha, red, green, blue), game));
+			
+			st.add(new Triangle(d.copy(), a.copy(), e.copy(), color, main));
+			st.add(new Triangle(b.copy(), f.copy(), e.copy(), color, main));
 			st.add(l);
-			st.add(new Triangle(c.copy(), d.copy(), f.copy(), Calculations.RGBtoHex(alpha, red, green, blue), game));
+			st.add(new Triangle(c.copy(), d.copy(), f.copy(), color, main));
 			
 		}
 		for (int i = 0; i < st.size(); i++) {
@@ -126,11 +118,10 @@ public class IcoSphere {
 //			st.get(i).a.normalize(center.x, center.y, center.z);
 //			st.get(i).b.normalize(center.x, center.y, center.z);
 //			st.get(i).c.normalize(center.x, center.y, center.z);
-			game.subdivideProgress = (float)i / (float)st.size();
+			main.subdivideProgress = (float)i / (float)st.size();
 		}
-		game.subdivideProgress = 0f;
+		main.subdivideProgress = 0f;
 		triangles = st;
-		game.rotating = wasRotating;
 		
 	}
 }

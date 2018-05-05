@@ -1,5 +1,5 @@
 public class Map {
-	int seed = (int)(200*Math.random());
+	int seed = 3595727;
 		
 	// Calculates the altitude at a given x, y, z using 3D perlin noise
 	public double altitude(double x, double y, double z) {
@@ -26,7 +26,7 @@ public class Map {
 			double a14 = interpolate(nz, nz + interval, a11, a12, z);
 			double val = interpolate(ny, ny + interval, a13, a14, y);
 			
-			altitude += (interval / 60.0) * val;
+			altitude += (interval / 80.0) * val;
 		}
 		return altitude;
 	}

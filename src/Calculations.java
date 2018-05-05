@@ -11,18 +11,13 @@ public class Calculations {
 	}
 	
 	// Converts ARGB values to a hexadecimal number
-	public static int RGBtoHex(int a, int r, int g, int b) {
-		return (a&0xff << 24) | ((r&0xff) << 16) | ((g&0xff) << 8) | (b&0xff);
+	public static int RGBtoHex(int r, int g, int b) {
+		return ((r&0xff) << 16) | ((g&0xff) << 8) | (b&0xff);
 	}
 	
 	// Returns a random number in hexadecimal format
 	public static int randomColor() {
-		return Calculations.RGBtoHex((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255));
-	}
-	
-	// Returns the alpha channel of a given color in hexadecimal format
-	public static int alpha(int hex) {
-		return (hex & 0xFF000000) >> 24;
+		return Calculations.RGBtoHex((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255));
 	}
 	
 	// Returns the red channel of a given color in hexadecimal format

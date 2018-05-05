@@ -17,7 +17,7 @@ public class Vector {
 	
 	// Projects a 3D vector onto the 2D screen
 	public Vector project() {
-		return new Vector(x / z * Game.WIDTH, y / z * Game.WIDTH, z);
+		return new Vector(x / z * Main.WIDTH, y / z * Main.WIDTH, z);
 	}
 	
 	// Returns the unit vector
