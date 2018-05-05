@@ -41,8 +41,10 @@ public class IcoSphere {
 	// updates object, applies transformations
 	public void update() {
 		Vector rotateVector = new Vector(Math.cos(Calculations.TO_RADIANS * 25), Math.sin(Calculations.TO_RADIANS * 25), center.z);
-		if (game.rotating)
-		rotate(center, rotateVector, Calculations.TO_RADIANS * 1);
+		if (game.rotating) {
+			rotate(center, rotateVector, Calculations.TO_RADIANS * 1);
+		}
+		
 	}
 	
 	// rotates all triangles in the object
@@ -115,12 +117,18 @@ public class IcoSphere {
 			st.add(new Triangle(b.copy(), f.copy(), e.copy(), Calculations.RGBtoHex(alpha, red, green, blue), game));
 			st.add(l);
 			st.add(new Triangle(c.copy(), d.copy(), f.copy(), Calculations.RGBtoHex(alpha, red, green, blue), game));
+			
 		}
 		for (int i = 0; i < st.size(); i++) {
 			st.get(i).a.perlin(center.x, center.y, center.z, map);
 			st.get(i).b.perlin(center.x, center.y, center.z, map);
 			st.get(i).c.perlin(center.x, center.y, center.z, map);
+//			st.get(i).a.normalize(center.x, center.y, center.z);
+//			st.get(i).b.normalize(center.x, center.y, center.z);
+//			st.get(i).c.normalize(center.x, center.y, center.z);
+			game.subdivideProgress = (float)i / (float)st.size();
 		}
+		game.subdivideProgress = 0f;
 		triangles = st;
 		game.rotating = wasRotating;
 		
