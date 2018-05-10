@@ -38,7 +38,7 @@ public class Triangle {
 	
 	// Separates triangle into 2 triangles with horizontal bases
 	Runnable render = () -> {
-		int shade = getShade(0);
+		int shade = getShade(20);
 		int highlight = getHighlight();
 			Vector a = this.a.project();
 			Vector b = this.b.project();
@@ -129,7 +129,7 @@ public class Triangle {
 							// just diffuse
 //							main.pixels[index] = Main.RGBtoHex(color.getRed(), color.getGreen(), color.getBlue());
 							
-							float[] value = Color.RGBtoHSB((int)(color.getRed() * Main.map(shade, 0.0, 255.0, 0.3, 1.0)),
+							float[] value = Color.RGBtoHSB((int)(color.getRed() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)),
 														   (int)(color.getGreen() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)),
 														   (int)(color.getBlue() * Main.map(shade, 0.0, 255.0, 0.0, 1.0)), null);
 							value[1] = (float) Main.map(highlight, 0.0, 255.0, value[1], 0.0); // saturation
@@ -170,7 +170,7 @@ public class Triangle {
 		normal.normalize(0, 0, 0);
 		light.rotate(new Vector(0, 0, 0), normal, Math.PI);
 		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
-		int highlight = (int)Math.pow(255.0/(1 + 0.004 * Math.pow(angle2, 2)), 2);
+		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
 //		int highlight = (int)(255.0 * Math.pow(Math.E, -0.07 * angle2));
 		
 //		int highlight = (int)(255.0 / (1.0 + (Math.pow(Math.E, 0.07 * (angle2 - 70)))));
@@ -178,7 +178,7 @@ public class Triangle {
 //		int highlight = (int)Math.min(Math.max(((-0.0014 * (Math.pow(angle2 - 45, 3))) + 127), 0), 255);
 
 //		int highlight = (int)Math.max(((-255.0/90.0) * angle2 + 255.0), 0);
-		return Math.min(Math.max(highlight, 0), 255);
+		return highlight;
 		
 	}
 	
