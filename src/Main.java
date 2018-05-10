@@ -29,10 +29,10 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	public boolean running = false;
 	public IcoSphere planet;
 	public ExecutorService executor;
-	private int backgroundColor = 0x171d33;
-	private Color planetColor = new Color(229, 235, 220);
+	private int backgroundColor = 0x00000;
+	private Color planetColor = Color.ORANGE; //new Color(0, 0, 0);
 	private double depth = 10;
-	public Vector lightSource = new Vector(-1, 0, depth - 5);
+	public Vector lightSource = new Vector(-10, -10, depth - 5);
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
 	private boolean mouseDown = false;

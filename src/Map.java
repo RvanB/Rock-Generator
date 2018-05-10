@@ -1,11 +1,13 @@
 public class Map {
-	int seed = 3595727;
+	int seed = 658;
 		
 	// Calculates the altitude at a given x, y, z using 3D perlin noise
 	public double altitude(double x, double y, double z) {
 		double altitude = 0;
 		
-		for (double interval = Math.PI * 2; interval > 0.01; interval /= 2.0) {
+		double val = 0;
+		
+		for (double interval = Math.PI; interval > 0.01; interval /= 2.0) {
 			double nx = Math.floor(x / interval) * interval;
 			double ny = Math.floor(y / interval) * interval;
 			double nz = Math.floor(z / interval) * interval;
@@ -24,11 +26,14 @@ public class Map {
 			double a12 = interpolate(nx, nx + interval, a7, a8, x);
 			double a13 = interpolate(nz, nz + interval, a9, a10, z);
 			double a14 = interpolate(nz, nz + interval, a11, a12, z);
-			double val = interpolate(ny, ny + interval, a13, a14, y);
 			
-			altitude += (interval / 80.0) * val;
+			double oldVal = val;
+			val = interpolate(ny, ny + interval, a13, a14, y);
+			
+//			altitude += (Math.pow(Math.E, -Math.PI / interval)) * val;
+			altitude += (interval / (20.0 * Math.PI)) * val;
 		}
-		return altitude;
+		return Math.pow(altitude, 1);
 	}
 	
 	// Interpolates between 2 points
@@ -37,9 +42,13 @@ public class Map {
 		return (1.0 - percent) * minval + percent * maxval;
 	}
 	
+	private double g(double x, double y, double z) {
+		return 2.0 * (0.5 - Math.abs(0.5 - g(x, y, z)));
+	}
+	
 	// Returns a altitude used in perlin noise using seed
 	private double f(double x, double y, double z) {
-		return Math.pow((Math.sin(x + y * (z % (x + 3))) + Math.sin((seed * (Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * Math.sqrt(seed * Math.abs(z)) * 30))), 2);
+		return ((Math.sin(x + y * (z % (x + 3))) + Math.sin((seed * (Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * Math.sqrt(seed * Math.abs(z)) * 30))));
 	}
 	
 }
