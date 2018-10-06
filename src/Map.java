@@ -26,7 +26,7 @@ public class Map {
 			double a14 = interpolate(nz, nz + interval, a11, a12, z);
 			double val = interpolate(ny, ny + interval, a13, a14, y);
 			
-			altitude += (interval / 80.0) * val;
+			altitude += interval / 80.0 * val;
 		}
 		return altitude;
 	}
@@ -39,7 +39,7 @@ public class Map {
 	
 	// Returns a altitude used in perlin noise using seed
 	private double f(double x, double y, double z) {
-		return Math.pow((Math.sin(x + y * (z % (x + 3))) + Math.sin((seed * (Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * Math.sqrt(seed * Math.abs(z)) * 30))), 2);
+		return Math.pow((Math.sin(x + y * (z % (x + 3))) + Math.sin((seed * (Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * Math.sqrt(seed * Math.abs(z)) * 30))), 3);
 	}
 	
 }
