@@ -38,7 +38,7 @@ public class Triangle {
 	
 	// Separates triangle into 2 triangles with horizontal bases
 	Runnable render = () -> {
-		int shade = getShade(20);
+		int shade = getShade(40);
 		int highlight = getHighlight();
 			Vector a = this.a.project();
 			Vector b = this.b.project();
@@ -115,17 +115,17 @@ public class Triangle {
 		double r = (c.x - b.x)/(c.y - b.y);
 		
 		for (int row = (int)a.y; row != c.y; row += ydir){
-			int cy = row + Main.HEIGHT/2;
-			if (cy >= 0 && cy < Main.HEIGHT) {
+			int cy = row + Main.HEIGHT / 2 * Main.superScalar;
+			if (cy >= 0 && cy < Main.HEIGHT * Main.superScalar) {
 				// Vectors a and b are inline with eachother
 				for (int col = (int)(a.x + (row - a.y) * l); col != (int)(b.x + (row - a.y) * r) + xdir; col += xdir) {
-					int cx = col + Main.WIDTH/2;
+					int cx = col + Main.WIDTH / 2 * Main.superScalar;
 					
-					if (cx >= 0 && cx < Main.WIDTH) {
-						int index = cy * Main.WIDTH + cx;
+					if (cx >= 0 && cx < Main.WIDTH * Main.superScalar) {
+						int index = cy * Main.WIDTH * Main.superScalar + cx;
 						double depth = depth(a, b, c, col, row);
-						if (main.zBuffer[index] > depth) {
-							main.zBuffer[index] = depth;
+						if (main.superZBuffer[index] > depth) {
+							main.superZBuffer[index] = depth;
 							// just diffuse
 //							main.pixels[index] = Main.RGBtoHex(color.getRed(), color.getGreen(), color.getBlue());
 							
@@ -136,7 +136,7 @@ public class Triangle {
 							value[2] = (float) Main.map(highlight, 0.0, 255.0, value[2], 1.0); // brightness
 							
 							Color result = Color.getHSBColor(value[0], value[1], value[2]);
-							main.pixels[index] = Main.RGBtoHex(result.getRed(), result.getGreen(), result.getBlue());
+							main.superResolutionPixels[index] = Main.RGBtoHex(result.getRed(), result.getGreen(), result.getBlue());
 							
 //							 old color calculation (incorrect highlight color)
 //							int lightValue = Math.min(Math.max(shade + highlight, 0), 255);
@@ -171,7 +171,7 @@ public class Triangle {
 		light.rotate(new Vector(0, 0, 0), normal, Math.PI);
 		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
 		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
-//		int highlight = (int)(255.0 * Math.pow(Math.E, -0.07 * angle2));
+//		int highlight = (int)(25/5.0 * Math.pow(Math.E, -0.07 * angle2));
 		
 //		int highlight = (int)(255.0 / (1.0 + (Math.pow(Math.E, 0.07 * (angle2 - 70)))));
 //		int highlight = (int)Math.max((-0.03148 * Math.pow(angle2, 2) + 255), 0);
@@ -188,7 +188,7 @@ public class Triangle {
 		double magnitude = main.lightSource.distance(0, 0, 0) * normal.distance(0, 0, 0);
 		Vector light = center.subtract(main.lightSource);
 		double angle = Main.TO_DEGREES * (Math.acos(light.dotProduct3D(normal) / magnitude));
-		return (int)Math.min(Math.max((255.0/(1 + Math.pow(Math.E, 0.15 * (-angle+90)))) + ambient, 0), 255);
+		return (int)Math.min(Math.max(((255.0-ambient)/(1.0 + Math.pow(Math.E, 0.05 * (-angle+140)))) + ambient, 0), 255);
 	}
 	
 }

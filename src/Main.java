@@ -21,8 +21,12 @@ import javax.swing.WindowConstants;
 public class Main extends Canvas implements Runnable, KeyListener, MouseListener, MouseMotionListener {
 
 	private static final long serialVersionUID = 1L;
-	public static final int WIDTH = 700;
-	public static final int HEIGHT = 700;
+	public static final int WIDTH = 600;
+	public static final int HEIGHT = 400;
+	private BufferedImage superResolution = new BufferedImage(WIDTH*2, HEIGHT*2, BufferedImage.TYPE_INT_RGB);
+	public int[] superResolutionPixels = ((DataBufferInt) superResolution.getRaster().getDataBuffer()).getData();
+	public double[] superZBuffer = new double[WIDTH*HEIGHT*4];
+	public static int superScalar = 2;
 	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 	public double[] zBuffer = new double[WIDTH*HEIGHT];
 	public int[] pixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
@@ -30,9 +34,9 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	public IcoSphere planet;
 	public ExecutorService executor;
 	private int backgroundColor = 0;
-	private Color planetColor = Color.LIGHT_GRAY;
-	private double depth = 10;
-	public Vector lightSource = new Vector(-1, 0, depth - 5);
+	private Color planetColor = Color.RED;
+	private double depth = 7.0;
+	public Vector lightSource = new Vector(20, -1, depth/2);
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
 	private boolean mouseDown = false;
@@ -40,9 +44,10 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	private int mouseY = 0;
 	private double yawVelocity = 0;
 	private double pitchVelocity = 0;
+	public static boolean projectionMethod = false;
 	
-	public static final double TO_RADIANS = Math.PI / 180;
-	public static final double TO_DEGREES = 180 / Math.PI;
+	public static final double TO_RADIANS = Math.PI / 180.0;
+	public static final double TO_DEGREES = 180.0 / Math.PI;
 	
 	// Takes a number in a range, and returns the equivalent in a different range
 	public static double map(double value, double min1, double max1, double min2, double max2) {
@@ -71,6 +76,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	
 	// Manages main loop
 	public void run() {
+		System.out.println(2 * Math.atan2(200, 1) * 180.0 / Math.PI);
 		long lastTime = System.nanoTime();
 		double unprocessed = 0;
 		double nsPerTick = 1000000000.0 / 60.0;
@@ -120,12 +126,9 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	// updates depth buffer, pixel background and all objects every frame
 	public void update() {
 //		lightSource.rotate(planet.center, new Vector(planet.center.x, planet.center.y - 20, planet.center.z), Calculations.TO_RADIANS * 1);
-		for (int row = 0; row < HEIGHT; row++) {
-			for (int col = 0; col < WIDTH; col++) {
-				int i = row * WIDTH + col;
-				zBuffer[i] = 50;
-				pixels[i] = backgroundColor;
-			}
+		for (int i = 0; i < HEIGHT*superScalar * WIDTH*superScalar; i++) {
+			superZBuffer[i] = 50;
+			superResolutionPixels[i] = backgroundColor;
 		}
 		
 		planet.update();
@@ -169,14 +172,56 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		}
 		
 		Graphics g = bs.getDrawGraphics();
+		
 		if (subdividing) {
 			g.setColor(Color.WHITE);
 			g.drawRect(WIDTH / 2 - 100, 50, 200, 10);
 			g.fillRect(WIDTH / 2 - 100, 50, (int) (subdivideProgress * 200), 10);
-		}
-		else {
+		} else {
+			if (superScalar == 1) { 
+				for (int i = 0; i < pixels.length; i++) {
+					pixels[i] = superResolutionPixels[i];
+					zBuffer[i] = superZBuffer[i];
+				}
+			} else {
+				for (int y = 0; y < Main.HEIGHT * superScalar; y += superScalar) {
+					for (int x = 0; x < Main.WIDTH * superScalar; x += superScalar) {
+						
+						double averageR = 0;
+						double averageG = 0;
+						double averageB = 0;
+						double averageZ = 0;
+						
+						for (int subY = 0; subY < superScalar; subY++) {
+							for (int subX = 0; subX < superScalar; subX++) {
+								
+								int i = (y + subY) * Main.WIDTH * superScalar + (x + subX);
+								if ((y + subY < Main.HEIGHT * superScalar) && (x + subX < Main.WIDTH * superScalar)) {
+									averageR += red(superResolutionPixels[i]);
+									averageR /= 2.0;
+									averageG += green(superResolutionPixels[i]);
+									averageG /= 2.0;
+									averageB += blue(superResolutionPixels[i]);
+									averageB /= 2.0;
+									
+									averageZ += superZBuffer[i];
+									averageZ /= 2.0;
+								}
+								
+							}
+						}
+						
+						int imgIndex = y/superScalar * Main.WIDTH + x/superScalar;
+						pixels[imgIndex] = RGBtoHex((int)averageR, (int)averageG, (int)averageB);
+						zBuffer[imgIndex] = averageZ;
+					}
+				}
+			}
+			
 			g.drawImage(img, 0, 0, null);
 		}
+		g.setColor(Color.WHITE);
+		g.drawString("Projection Method: " + (projectionMethod ? "not tangent" : "tangent"), 10, 20);
 		g.dispose();
 		bs.show();
 	}
@@ -200,9 +245,11 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 				yawVelocity = y;
 				pitchVelocity = p;
 			}
+		} else if (c == KeyEvent.VK_P) {
+			projectionMethod = !projectionMethod;
 		}
-		if (c == KeyEvent.VK_ESCAPE) System.exit(0);
-
+		else if (c == KeyEvent.VK_ESCAPE) System.exit(0);
+		
 	}
 	
 	public void keyReleased(KeyEvent e) {}

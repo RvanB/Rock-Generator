@@ -17,13 +17,17 @@ public class Vector {
 	
 	// Projects a 3D vector onto the 2D screen
 	public Vector project() {
-//		return new Vector(x / z * Main.WIDTH, y / z * Main.WIDTH, z);
-		double xRad = 2 * Math.atan2(x, (2 * z));
-		double yRad = 2 * Math.atan2(y, (2 * z));
-		double fov = 90 * Math.PI / 180;
-		int x = (int)(xRad / fov * Main.WIDTH);
-		int y = (int)(yRad / fov * Main.HEIGHT);
-		return new Vector(x, y, z);
+		if (Main.projectionMethod) {
+			return new Vector((x / z) * Main.WIDTH, (y / z) * Main.WIDTH, z);
+		} else {
+		
+			double xRad = 2 * Math.atan2(x, (2 * z));
+			double yRad = 2 * Math.atan2(y, (2 * z));
+			double fov = 90.0 * (Math.PI / 180.0);
+			int x = (int)((xRad / fov) * Main.WIDTH* Main.superScalar);
+			int y = (int)((yRad / fov) * Main.WIDTH * Main.superScalar);
+			return new Vector(x, y, z);
+		}
 	}
 	
 	// Returns the unit vector
@@ -47,7 +51,7 @@ public class Vector {
 		
 		double length = Math.abs(distance(x, y, z));
 		
-		double scalar = Math.abs(Main.map(map.altitude(this.x, this.y, this.z), -1, 1, -2, 2));
+		double scalar = Math.abs(Main.map(map.altitude(this.x, this.y, this.z), -1, 1, -3, 3));
 		
 		this.x -= x;
 		this.y -= y;
