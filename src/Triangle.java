@@ -38,8 +38,18 @@ public class Triangle {
 	
 	// Separates triangle into 2 triangles with horizontal bases
 	Runnable render = () -> {
-		int shade = getShade(40);
-		int highlight = getHighlight();
+		int shade = 0;
+		int highlight = 0;
+		
+		for (Vector light : main.lights) {
+			shade += getShade(light, 20);
+			highlight += getHighlight(light);
+		}
+		
+		shade = Math.min(255, Math.max(0, shade));
+		highlight = Math.min(255, Math.max(0, highlight));
+		
+		
 			Vector a = this.a.project();
 			Vector b = this.b.project();
 			Vector c = this.c.project();
@@ -160,17 +170,18 @@ public class Triangle {
 	
 	
 	// returns the shade value of a triangle based on its normal vector
-	public int getHighlight() {
+	public int getHighlight(Vector light) {
 		Vector center = new Vector((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
 		
 		// Highlight based lighting
-		Vector light = center.subtract(main.lightSource);
-		light.normalize(0, 0, 0);
+		Vector ray = center.subtract(light);
+		ray.normalize(0, 0, 0);
 		center.normalize(0, 0, 0);
 		normal.normalize(0, 0, 0);
-		light.rotate(new Vector(0, 0, 0), normal, Math.PI);
-		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(light)));
-		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
+		ray.rotate(new Vector(0, 0, 0), normal, Math.PI);
+		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(ray)));
+//		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
+		int highlight = (int)(255.0/(1 + 0.0005 * Math.pow(angle2, 2))); // bigger highlight than above function
 //		int highlight = (int)(25/5.0 * Math.pow(Math.E, -0.07 * angle2));
 		
 //		int highlight = (int)(255.0 / (1.0 + (Math.pow(Math.E, 0.07 * (angle2 - 70)))));
@@ -182,13 +193,13 @@ public class Triangle {
 		
 	}
 	
-	public int getShade(int ambient) {
+	public int getShade(Vector light, int ambient) {
 		// Old lighting
 		Vector center = new Vector((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
-		double magnitude = main.lightSource.distance(0, 0, 0) * normal.distance(0, 0, 0);
-		Vector light = center.subtract(main.lightSource);
-		double angle = Main.TO_DEGREES * (Math.acos(light.dotProduct3D(normal) / magnitude));
-		return (int)Math.min(Math.max(((255.0-ambient)/(1.0 + Math.pow(Math.E, 0.05 * (-angle+140)))) + ambient, 0), 255);
+		double magnitude = light.distance(0, 0, 0) * normal.distance(0, 0, 0);
+		Vector ray = center.subtract(light);
+		double angle = Main.TO_DEGREES * (Math.acos(ray.dotProduct3D(normal) / magnitude));
+		return (int)Math.min(Math.max(((255.0-ambient)/(1.0 + Math.pow(Math.E, 0.07 * (-angle+140)))) + ambient, 0), 255);
 	}
 	
 }

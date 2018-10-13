@@ -1,6 +1,7 @@
 import java.util.Random;
 
 public class Map {
+	double seed = Math.random();
 		
 	// Calculates the altitude at a given x, y, z using 3D perlin noise
 	public double altitude(double x, double y, double z) {
@@ -27,7 +28,7 @@ public class Map {
 			double a14 = interpolate(nz, nz + interval, a11, a12, z);
 			double val = interpolate(ny, ny + interval, a13, a14, y);
 			
-			altitude += interval / 80.0 * val;
+			altitude += interval / 20.0 * val;
 		}
 		return altitude;
 	}
@@ -43,7 +44,7 @@ public class Map {
 	private double f(double x, double y, double z) {
 		Random r = new Random((int)(Math.abs(9*Math.sin(x)) * 100 + Math.abs(9 * Math.cos(y)) * 10 + Math.abs(9 * Math.sin(z))));
 		String s = x + "" + y + "" + z;
-		return (s.hashCode() % 4);
+		return (-s.hashCode() % (r.nextDouble() * seed));
 		
 	}
 	

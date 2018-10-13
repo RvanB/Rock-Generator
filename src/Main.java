@@ -34,9 +34,9 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	public IcoSphere planet;
 	public ExecutorService executor;
 	private int backgroundColor = 0;
-	private Color planetColor = Color.RED;
-	private double depth = 7.0;
-	public Vector lightSource = new Vector(20, -1, depth/2);
+	private Color planetColor = new Color(150, 0, 255);
+	private double depth = 10;
+	public ArrayList<Vector> lights = new ArrayList<Vector>();
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
 	private boolean mouseDown = false;
@@ -76,7 +76,6 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	
 	// Manages main loop
 	public void run() {
-		System.out.println(2 * Math.atan2(200, 1) * 180.0 / Math.PI);
 		long lastTime = System.nanoTime();
 		double unprocessed = 0;
 		double nsPerTick = 1000000000.0 / 60.0;
@@ -111,7 +110,11 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		planet = new IcoSphere(new Vector(0, 0, depth), planetColor, this);
+		
+		lights.add(new Vector(-10, 10, 20));
+		lights.add(new Vector(10, -10, depth/2));
 		executor = Executors.newWorkStealingPool();
+		
 	}
 	
 	// Starts the main thread and background color
@@ -135,6 +138,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		
 		planet.rotate(planet.center, new Vector(1, 0, depth), pitchVelocity);
 		planet.rotate(planet.center, new Vector(0, 1, depth), yawVelocity);
+	
 		
 		if (mouseDown) {
 			pitchVelocity = 0;
