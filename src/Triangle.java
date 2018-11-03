@@ -42,7 +42,7 @@ public class Triangle {
 		int highlight = 0;
 		
 		for (Vector light : main.lights) {
-			shade += getShade(light, 20);
+			shade += getShade(light, 40);
 			highlight += getHighlight(light);
 		}
 		
@@ -180,8 +180,8 @@ public class Triangle {
 		normal.normalize(0, 0, 0);
 		ray.rotate(new Vector(0, 0, 0), normal, Math.PI);
 		double angle2 = Main.TO_DEGREES * (Math.acos(center.dotProduct3D(ray)));
-//		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
-		int highlight = (int)(255.0/(1 + 0.0005 * Math.pow(angle2, 2))); // bigger highlight than above function
+		int highlight = (int)(255.0/(1 + 0.004 * Math.pow(angle2, 2)));
+//		int highlight = (int)(255.0/(1 + 0.0005 * Math.pow(angle2, 2))); // bigger highlight than above function
 //		int highlight = (int)(25/5.0 * Math.pow(Math.E, -0.07 * angle2));
 		
 //		int highlight = (int)(255.0 / (1.0 + (Math.pow(Math.E, 0.07 * (angle2 - 70)))));

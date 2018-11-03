@@ -39,6 +39,18 @@ public class IcoSphere {
 		map = new Map();
 	}
 	
+	public double getVolume() {
+		double volume = 0;
+		for (Triangle t : triangles) {
+			Vector AB = new Vector(t.a.x - center.x, t.a.y - center.y, t.a.z - center.z);
+			Vector AC = new Vector(t.b.x - center.x, t.b.y - center.y, t.b.z - center.z);
+			Vector AD = new Vector(t.c.x - center.x, t.c.y - center.y, t.c.z - center.z);
+			
+			volume += AD.dotProduct3D(AB.crossProduct(AC));
+		}
+		return volume / 6.0;
+	}
+	
 	// updates object, applies transformations
 	public void update() {
 		

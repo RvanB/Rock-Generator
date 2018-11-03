@@ -21,12 +21,12 @@ import javax.swing.WindowConstants;
 public class Main extends Canvas implements Runnable, KeyListener, MouseListener, MouseMotionListener {
 
 	private static final long serialVersionUID = 1L;
-	public static final int WIDTH = 600;
-	public static final int HEIGHT = 400;
+	public static final int WIDTH = 800;
+	public static final int HEIGHT = 600;
 	private BufferedImage superResolution = new BufferedImage(WIDTH*2, HEIGHT*2, BufferedImage.TYPE_INT_RGB);
 	public int[] superResolutionPixels = ((DataBufferInt) superResolution.getRaster().getDataBuffer()).getData();
 	public double[] superZBuffer = new double[WIDTH*HEIGHT*4];
-	public static int superScalar = 2;
+	public static int superScalar = 1;
 	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 	public double[] zBuffer = new double[WIDTH*HEIGHT];
 	public int[] pixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
@@ -34,7 +34,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	public IcoSphere planet;
 	public ExecutorService executor;
 	private int backgroundColor = 0;
-	private Color planetColor = new Color(150, 0, 255);
+	private Color planetColor = new Color(255, 50, 0);
 	private double depth = 10;
 	public ArrayList<Vector> lights = new ArrayList<Vector>();
 	private boolean subdividing = false;
@@ -45,6 +45,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	private double yawVelocity = 0;
 	private double pitchVelocity = 0;
 	public static boolean projectionMethod = false;
+	double volume = 0;
 	
 	public static final double TO_RADIANS = Math.PI / 180.0;
 	public static final double TO_DEGREES = 180.0 / Math.PI;
@@ -100,6 +101,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		setMaximumSize(new Dimension(WIDTH, HEIGHT));
 		
 		JFrame frame = new JFrame();
+//		frame.setUndecorated(true);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.add(this);
 		frame.pack();
@@ -111,8 +113,8 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		addMouseMotionListener(this);
 		planet = new IcoSphere(new Vector(0, 0, depth), planetColor, this);
 		
-		lights.add(new Vector(-10, 10, 20));
-		lights.add(new Vector(10, -10, depth/2));
+		lights.add(new Vector(-1, 5, depth / 2));
+		lights.add(new Vector(10, -100, 0));
 		executor = Executors.newWorkStealingPool();
 		
 	}
@@ -225,7 +227,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 			g.drawImage(img, 0, 0, null);
 		}
 		g.setColor(Color.WHITE);
-		g.drawString("Projection Method: " + (projectionMethod ? "not tangent" : "tangent"), 10, 20);
+		g.drawString("Volume: " + volume, 10, 20);
 		g.dispose();
 		bs.show();
 	}
@@ -249,6 +251,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 				yawVelocity = y;
 				pitchVelocity = p;
 			}
+			volume = planet.getVolume();
 		} else if (c == KeyEvent.VK_P) {
 			projectionMethod = !projectionMethod;
 		}
