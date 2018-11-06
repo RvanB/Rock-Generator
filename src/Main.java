@@ -26,72 +26,47 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 	private BufferedImage superResolution = new BufferedImage(WIDTH*2, HEIGHT*2, BufferedImage.TYPE_INT_RGB);
 	public int[] superResolutionPixels = ((DataBufferInt) superResolution.getRaster().getDataBuffer()).getData();
 	public double[] superZBuffer = new double[WIDTH*HEIGHT*4];
-	public static int superScalar = 1;
+	public static int superScalar = 2;
 	private BufferedImage img = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 	public double[] zBuffer = new double[WIDTH*HEIGHT];
 	public int[] pixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
 	public boolean running = false;
-	public IcoSphere planet;
+	public IcoSphere object;
 	public ExecutorService executor;
-	private int backgroundColor = 0;
-	private Color planetColor = new Color(255, 50, 0);
-	private double depth = 10;
-	public ArrayList<Vector> lights = new ArrayList<Vector>();
+	public Color backgroundColor = Color.BLACK;
+	private Color hudColor = Color.WHITE;
+	public ArrayList<Light> lights = new ArrayList<Light>();
 	private boolean subdividing = false;
 	public float subdivideProgress = 0;
 	private boolean mouseDown = false;
 	private int mouseX = 0;
 	private int mouseY = 0;
-	private double yawVelocity = 0;
-	private double pitchVelocity = 0;
+	public double yawVelocity = 0;
+	public double pitchVelocity = 0;
 	public static boolean projectionMethod = false;
 	double volume = 0;
+	double ambientIntensity = 0.3;
 	
 	public static final double TO_RADIANS = Math.PI / 180.0;
 	public static final double TO_DEGREES = 180.0 / Math.PI;
 	
-	// Takes a number in a range, and returns the equivalent in a different range
-	public static double map(double value, double min1, double max1, double min2, double max2) {
-		return value / (max1-min1) * (max2-min2) + min2;
-	}
-	
-	// Converts ARGB values to a hexadecimal number
-	public static int RGBtoHex(int r, int g, int b) {
-		return ((r&0xff) << 16) | ((g&0xff) << 8) | (b&0xff);
-	}
-	
-	// Returns the red channel of a given color in hexadecimal format
-	public static int red(int hex) {
-	    return (hex & 0xFF0000) >> 16;
-	}
-	
-	// Returns the green channel of a given color in hexadecimal format
-	public static int green(int hex) {
-	    return (hex & 0xFF00) >> 8;
-	}
-	
-	// Returns the blue channel of a given color in hexadecimal format
-	public static int blue(int hex) {
-	    return (hex & 0xFF);
-	}
-	
-	// Manages main loop
-	public void run() {
-		long lastTime = System.nanoTime();
-		double unprocessed = 0;
-		double nsPerTick = 1000000000.0 / 60.0;
-
-		while (running) {
-			long now = System.nanoTime();
-			unprocessed += (now - lastTime) / nsPerTick;
-			lastTime = now;
-			while (unprocessed >= 1) {
-				update();
-				unprocessed -= 1;
-			}
-			render();
+	public static Color additiveMix(Color a, Color b) {
+		double red = a.getRed() + b.getRed();
+		double green = a.getGreen() + b.getGreen();
+		double blue = a.getBlue() + b.getBlue();
+		double max = Math.max(red, Math.max(green, blue));
+		if (max > 255) {
+			red = red / max * 255.0;
+			green = green / max * 255.0;
+			blue = blue / max * 255.0;
 		}
-		executor.shutdown();
+		return new Color((int)red, (int)green, (int)blue);
+	}
+	
+	public static Color subtractiveMix(Color a, Color b) {
+		Vector argb = new Vector(a.getRed() / 255.0, a.getGreen() / 255.0, a.getBlue() / 255.0);
+		Vector brgb = new Vector(b.getRed() / 255.0, b.getGreen() / 255.0, b.getBlue() / 255.0);
+		return new Color((int)(255 * argb.x * brgb.x), (int)(255 * argb.y * brgb.y), (int)(255 * argb.z * brgb.z));
 	}
 	
 	// Sets up window and initializes objects
@@ -100,7 +75,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		setMaximumSize(new Dimension(WIDTH, HEIGHT));
 		
-		JFrame frame = new JFrame();
+		JFrame frame = new JFrame("Rock Generator by Raiden van Bronkhorst and Bryan Mendes");
 //		frame.setUndecorated(true);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.add(this);
@@ -111,35 +86,45 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		planet = new IcoSphere(new Vector(0, 0, depth), planetColor, this);
+		object = new IcoSphere(new Vector(0, 0, 3), Color.WHITE, this);
 		
-		lights.add(new Vector(-1, 5, depth / 2));
-		lights.add(new Vector(10, -100, 0));
+//		for (int i = 0; i < Math.random() * 3; i++) {
+//			randomLight();
+//		}
+		
+		lights.add(new Light(-.5, .5, -1, Color.GREEN));
+		lights.add(new Light(.5, .5, -1, Color.RED));
+		lights.add(new Light(0, 0, -1, Color.BLUE));
+		randomLight();
+		randomLight();
 		executor = Executors.newWorkStealingPool();
 		
+	}
+	
+	public void randomLight() {
+		lights.add(new Light(Math.random() * 200 - 100, Math.random() * 200 - 100, Math.random() * 200 - 100, new Color((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255))));
 	}
 	
 	// Starts the main thread and background color
 	public void start() {
 		running = true;
 		for (int i = 0; i < pixels.length; i++) {
-			pixels[i] = backgroundColor;
+			pixels[i] = RGBtoHex(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue());
 		}
 		new Thread(this).start();
 	}
 	
 	// updates depth buffer, pixel background and all objects every frame
 	public void update() {
-//		lightSource.rotate(planet.center, new Vector(planet.center.x, planet.center.y - 20, planet.center.z), Calculations.TO_RADIANS * 1);
+//		lightSource.rotate(object.center, new Vector(object.center.x, object.center.y - 20, object.center.z), Calculations.TO_RADIANS * 1);
 		for (int i = 0; i < HEIGHT*superScalar * WIDTH*superScalar; i++) {
 			superZBuffer[i] = 50;
-			superResolutionPixels[i] = backgroundColor;
+			superResolutionPixels[i] = RGBtoHex(backgroundColor.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue());;
 		}
 		
-		planet.update();
+		object.update();
 		
-		planet.rotate(planet.center, new Vector(1, 0, depth), pitchVelocity);
-		planet.rotate(planet.center, new Vector(0, 1, depth), yawVelocity);
+		
 	
 		
 		if (mouseDown) {
@@ -151,8 +136,8 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		}
 		ArrayList<Future<?>> futures = new ArrayList<Future<?>>();
 		
-		for (int j = 0; j < planet.triangles.size(); j++) {
-			Triangle t = planet.triangles.get(j);
+		for (int j = 0; j < object.triangles.size(); j++) {
+			Triangle t = object.triangles.get(j);
 			if (t.a.z > 0 && t.b.z > 0 && t.c.z > 0) {
 				t.getNormal();
 				if (t.a.dotProduct3D(t.normal) < 0) // backface culling
@@ -180,7 +165,7 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 		Graphics g = bs.getDrawGraphics();
 		
 		if (subdividing) {
-			g.setColor(Color.WHITE);
+			g.setColor(hudColor);
 			g.drawRect(WIDTH / 2 - 100, 50, 200, 10);
 			g.fillRect(WIDTH / 2 - 100, 50, (int) (subdivideProgress * 200), 10);
 		} else {
@@ -226,11 +211,55 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 			
 			g.drawImage(img, 0, 0, null);
 		}
-		g.setColor(Color.WHITE);
+		g.setColor(hudColor);
 		g.drawString("Volume: " + volume, 10, 20);
 		g.dispose();
 		bs.show();
 	}
+	
+	// Takes a number in a range, and returns the equivalent in a different range
+		public static double map(double value, double min1, double max1, double min2, double max2) {
+			return value / (max1-min1) * (max2-min2) + min2;
+		}
+		
+		// Converts ARGB values to a hexadecimal number
+		public static int RGBtoHex(int r, int g, int b) {
+			return ((r&0xff) << 16) | ((g&0xff) << 8) | (b&0xff);
+		}
+		
+		// Returns the red channel of a given color in hexadecimal format
+		public static int red(int hex) {
+		    return (hex & 0xFF0000) >> 16;
+		}
+		
+		// Returns the green channel of a given color in hexadecimal format
+		public static int green(int hex) {
+		    return (hex & 0xFF00) >> 8;
+		}
+		
+		// Returns the blue channel of a given color in hexadecimal format
+		public static int blue(int hex) {
+		    return (hex & 0xFF);
+		}
+		
+		// Manages main loop
+		public void run() {
+			long lastTime = System.nanoTime();
+			double unprocessed = 0;
+			double nsPerTick = 1000000000.0 / 60.0;
+
+			while (running) {
+				long now = System.nanoTime();
+				unprocessed += (now - lastTime) / nsPerTick;
+				lastTime = now;
+				while (unprocessed >= 1) {
+					update();
+					unprocessed -= 1;
+				}
+				render();
+			}
+			executor.shutdown();
+		}
 	
 	public static void main(String[] args) {
 		new Main().start();
@@ -246,12 +275,12 @@ public class Main extends Canvas implements Runnable, KeyListener, MouseListener
 				yawVelocity = 0;
 				pitchVelocity = 0;
 				subdividing = true;
-				planet.subdivide();
+				object.subdivide();
 				subdividing = false;
 				yawVelocity = y;
 				pitchVelocity = p;
 			}
-			volume = planet.getVolume();
+			volume = object.getVolume();
 		} else if (c == KeyEvent.VK_P) {
 			projectionMethod = !projectionMethod;
 		}

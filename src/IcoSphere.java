@@ -53,7 +53,8 @@ public class IcoSphere {
 	
 	// updates object, applies transformations
 	public void update() {
-		
+		rotate(center, new Vector(1, 0, center.z), main.pitchVelocity);
+		rotate(center, new Vector(0, 1, center.z), main.yawVelocity);
 	}
 	
 	// rotates all triangles in the object
@@ -123,12 +124,12 @@ public class IcoSphere {
 			
 		}
 		for (int i = 0; i < st.size(); i++) {
-			st.get(i).a.perlin(center.x, center.y, center.z, map);
-			st.get(i).b.perlin(center.x, center.y, center.z, map);
-			st.get(i).c.perlin(center.x, center.y, center.z, map);
-//			st.get(i).a.normalize(center.x, center.y, center.z);
-//			st.get(i).b.normalize(center.x, center.y, center.z);
-//			st.get(i).c.normalize(center.x, center.y, center.z);
+//			st.get(i).a.perlin(center.x, center.y, center.z, map);
+//			st.get(i).b.perlin(center.x, center.y, center.z, map);
+//			st.get(i).c.perlin(center.x, center.y, center.z, map);
+			st.get(i).a.normalize(center.x, center.y, center.z);
+			st.get(i).b.normalize(center.x, center.y, center.z);
+			st.get(i).c.normalize(center.x, center.y, center.z);
 			main.subdivideProgress = (float)i / (float)st.size();
 		}
 		main.subdivideProgress = 0f;

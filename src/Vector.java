@@ -10,6 +10,11 @@ public class Vector {
 		this.z = z;
 	}
 	
+	// scales the vector by the given scalar.
+	public Vector scale(double scalar) {
+		return new Vector(x * scalar, y * scalar, z * scalar);
+	}
+	
 	// Subtracts two vectors
 	public Vector subtract(Vector b) {
 		return new Vector(x - b.x, y - b.y, z - b.z);

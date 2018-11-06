@@ -28,7 +28,7 @@ public class Map {
 			double a14 = interpolate(nz, nz + interval, a11, a12, z);
 			double val = interpolate(ny, ny + interval, a13, a14, y);
 			
-			altitude += interval / 20.0 * val;
+			altitude += interval / 14.0 * val;
 		}
 		return altitude;
 	}
